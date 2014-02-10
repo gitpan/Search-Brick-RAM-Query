@@ -24,4 +24,4 @@ requires:
   IO::Select: 1.17
   Test::Exception: 0.32
   Time::HiRes: 1.9725
-version: 0.02
+version: 0.03
