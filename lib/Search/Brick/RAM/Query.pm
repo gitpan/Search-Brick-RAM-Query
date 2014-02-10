@@ -24,7 +24,7 @@ our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw() ] );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(fetch query new tcp true false msgpack_array_begin msgpack_map_begin);
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # some parts are borrowed from Hijk
 # https://github.com/gugod/Hijk/blob/master/lib/Hijk.pm
@@ -617,17 +617,17 @@ similarity information: L<https://lucene.apache.org/core/4_6_0/core/org/apache/l
 
 the "data" can be in array format, or just concatinated documnts joined by '' (depending on the "expect_array" setting)
 
-=head4 there are 2 ways to index:
-
 =over 2
 
 =item
 
-You can create .messagepack files by concatinating the settings with the data, and just putting it in the "RAMBRICK_AUTO_LOAD_ROOT" (by default "/var/lib/brick/ram/") directory (start brick with RAMBRICK_AUTO_LOAD_ROOT env variable set to wherever you want).
+file backed
+
+You can create .messagepack files by concatinating the settings with the data, and just putting it in the "RAMBRICK_AUTO_LOAD_ROOT" (by default "/var/lib/brick/ram/") directory (start brick with RAMBRICK_AUTO_LOAD_ROOT env variable set to wherever you want). Those indexes can also be stored as lucene index (if the "stored" setting points to a directory within the RAMBRIKC_AUTO_LOAD_ROOT)
 
 =item
 
-or you can use the "store" action
+online
 
  my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
  $s->index([{ author => 'jack', group_by => "23" },{ author => 'jack', group_by => "24" }],$settings);

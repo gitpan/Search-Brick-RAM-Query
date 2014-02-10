@@ -6,7 +6,14 @@ mkmanifest();
 WriteMakefile(
     NAME              => 'Search::Brick::RAM::Query',
     VERSION_FROM      => 'lib/Search/Brick/RAM/Query.pm', # finds $VERSION
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {
+        Data::MessagePack => 0.48,
+        Data::MessagePack::Stream => 0.07,
+        Test::Exception => 0.32,
+        IO::Select => 1.17,
+        Time::HiRes => 1.9725,
+        Data::Dumper => 2.145
+    },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Search/Brick/RAM/Query.pm', # retrieve abstract from module
        AUTHOR         => 'Borislav Nikolov <jack@sofialondonmoskva.com>') : ()),
