@@ -3,7 +3,7 @@
    "author" : [
       "Borislav Nikolov <jack@sofialondonmoskva.com>"
    ],
-   "dynamic_config" : 1,
+   "dynamic_config" : 0,
    "generated_by" : "ExtUtils::MakeMaker version 6.84, CPAN::Meta::Converter version 2.133380",
    "license" : [
       "perl_5"

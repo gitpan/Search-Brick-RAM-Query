@@ -6,6 +6,7 @@ mkmanifest();
 WriteMakefile(
     NAME              => 'Search::Brick::RAM::Query',
     VERSION_FROM      => 'lib/Search/Brick/RAM/Query.pm', # finds $VERSION
+    LICENSE           => 'perl_5',
     PREREQ_PM         => {
         Data::MessagePack => 0.48,
         Data::MessagePack::Stream => 0.07,

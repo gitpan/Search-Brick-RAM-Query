@@ -24,7 +24,7 @@ our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw() ] );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(fetch query new tcp true false msgpack_array_begin msgpack_map_begin);
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 # some parts are borrowed from Hijk
 # https://github.com/gugod/Hijk/blob/master/lib/Hijk.pm
@@ -259,9 +259,9 @@ https://github.com/jackdoe/brick/tree/master/bricks/RAMBrick
 
 =head1 DESCRIPTION
 
-minimalistic interface to RAMBrick
+minimalistic interface to RAMBrick (a minimalistic Lucene wrapper)
 
-=head1 FUNCTION: Search::Brick::RAM::Query::query( $args :Hash ) :Ref
+=head1 FUNCTION: Search::Brick::RAM::Query::query( $args :Hash ) :Array
 
 C<Search::Brick::RAM::Query::query> has the following parameters:
 
@@ -271,42 +271,102 @@ C<Search::Brick::RAM::Query::query> has the following parameters:
  action  => 'search', # (search|store|alias|load)
  index   => '...',    # name of your index
  timeout => 0.5,      # in seconds
- settings => {}       # used by different actions to get context on the reques
+ settings => {}       # used by different actions to get context on the request
+
+=over 0
+
+=item timeout
 
 C<timeout> is the whole round trip timeout: (connect time + write time + 
 read time).
 
+=item brick
+
 C<brick> is the brick's name (in this case 'RAM')
+
+=item action
 
 C<action> is the requested action (search|store|stat)
 
+=item request
+
 C<request> must be reference to array of hashrefs
+
+=item index
 
 C<index> is the action argument, provides context to the request (usually index name)
 
-C<settings> C<RAMBrick> requires settings to be sent (by default they are empty) things like "size" or "items_per_group" like: C<< { size => 5, explain => true } >>
+=item settings
+
+C<settings> C<RAMBrick> requires settings to be sent (by default they are empty) things like C<size> or C<items_per_group> like: C<< { size => 5, explain => true } >>
+
+=item host
 
 C<host> string or arrayref of strings - the same request will be sent to all hosts in the list (the whole thing is async, so will be as slow as the slowest host) and un-ordered array of results is returned.
+
+=back
 
 If the result is not C<ref()> or there is any kind of error(including timeout),
 the request will die.
 
-=head2 SEARCH
+=head2 Query object
+
+you can also use the module by creating a Query object, such as:
 
  my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
  my @results = $s->search({ term => { author => 'jack' } }, { size => 20, explain => true, log_slower_than => 5 });
 
-=head3 QUERY SYNTAX
+
+Simple wrapper making C<query()> calls, but without having to pass C<index>, C<brick>, C<host> every time.
 
 =over 2
 
-=item boosting
+=item search($query,$settings,$timeout || DEFAULT_TIMEOUT)
+
+=item index($data,$settings,$timeout || DEFAULT_TIMEOUT)
+
+=item alias($settings,$timeout || DEFAULT_TIMEOUT)
+
+=item stat($timeout || DEFAULT_TIMEOUT)
+
+=item delete($timeout || DEFAULT_TIMEOUT)
+
+=back
+
+all of the above are just making C<query()> calls with the selected parameters, but also passing C<< brick => 'RAM'> >>, C<< index => __test >>(in this example) and C<< host => [ '127.0.0.1:9000' ] >>
+
+=head2 multiple hosts
+
+each request can be sent to more than 1 host, the B<exact> same copy of the request is sent B<asynchronously> to all of them, after all copies have been sent, we B<asynchronously> wait for the results. So the whole request is as slow as the slowest host.
+
+=head2 result
+
+the results are B<un-sorted>, so if the request is for host C<127.0.0.1:9000, 10.0.0.2:9000> the result array might be C<([arrayref of the result of 10.0.0.2:9000],[arrayref of 127.0.0.1:9000])>.
+
+Every result object is B<always> C<array>, even if the request has only 1 host.
+
+=head2 timeout
+
+the timeout is B<total> timeout, includint C<connect> time + C<send> time + C<rect> time for all the hosts combined. So when you say B<0.5> (half a second) and give it 20 hosts, the moment it reaches 0.5 seconds, it will die, regardless of how much data it received, or how much data it is about to send. 
+
+=head2 error
+
+there is no B<error> object, the module B<dies> on every error (including timeouts, query syntax errors etc..).
+
+=head1 SEARCH
+
+ my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
+ my @results = $s->search({ term => { author => 'jack' } }, { size => 20, explain => true, log_slower_than => 5 });
+
+=head2 QUERY SYNTAX
+
+=head3 boosting
 
 every query except C<term> and C<lucene>  supports C<boost> parameter like:
 
  bool => { must [ { term => { author => 'jack' } } ], boost => 4.3 }
 
-=item term
+=head3 term
 
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/TermQuery.html>
 
@@ -320,9 +380,9 @@ example:
 
 since RAMBrick does not do any query rewrites (like ElasticSearch's C<match> query) and it also does not do any kind of analysis on the query string, the C<term> and C<lucene> queries are the only queries that can be used to match specific documents.
 
-=item lucene
+=head3 lucene
 
-creates L<http://lucene.apache.org/core/4_6_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package_description> query:
+creates L<http://lucene.apache.org/core/4_6_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package_description>
 
 syntax:
 
@@ -334,7 +394,9 @@ example:
 
 you can do pretty much everything with it like in this example it creates a C<constant score query> over a C<term query>
 
-=item dis_max
+=head3 dis_max
+
+creates L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/DisjunctionMaxQuery.html>
 
 syntax:
   
@@ -348,7 +410,9 @@ syntax:
  }
 
 
-=item bool
+=head3 bool
+
+creates: L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/BooleanQuery.html>
 
 syntax:
 
@@ -367,7 +431,7 @@ syntax:
      boost => 1.0
  }
 
-=item constant_score
+=head3 constant_score
 
 creates L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/ConstantScoreQuery.html>
 
@@ -375,7 +439,7 @@ syntax:
 
  constant_score => { query => ..., boost => 4.0 }
 
-=item filtered
+=head3 filtered
 
 creates L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/QueryWrapperFilter.html>
 or L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/CachingWrapperFilter.html>
@@ -396,7 +460,7 @@ example:
  })
 
 
-=item match_all
+=head3 match_all
 
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/MatchAllDocsQuery.html>
 
@@ -405,7 +469,7 @@ syntax:
  match_all => {}
 
  
-=item custom_score
+=head3 custom_score
 
 syntax:
 
@@ -423,7 +487,7 @@ will create an instance of BoosterQuery, with "Map<String,Map<String,String>>" p
 
 look at L<https://github.com/jackdoe/brick/blob/master/bricks/RAMBrick/queries/BoosterQuery.java> for simple example
 
-=item span_first
+=head3 span_first
 
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/spans/SpanFirstQuery.html>
 
@@ -441,7 +505,7 @@ synax:
 matches the term "doe" in the first "end" positions of the field
 more detailed info on the span queries: L<http://searchhub.org/2009/07/18/the-spanquery/>
 
-=item span_near
+=head3 span_near
 
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/spans/SpanNearQuery.html>
 
@@ -481,7 +545,7 @@ example:
  }
 
 
-=item span_term
+=head3 span_term
 
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/spans/SpanTermQuery.html>
 
@@ -490,13 +554,10 @@ syntax:
 
 span_term queries are the building block of all span queries
 
-=back
 
-=head3 QUERY SETTINGS
+=head2 QUERY SETTINGS
 
-=over 2
-
-=item log_slower_than
+=head3 log_slower_than
 
 syntax:
 
@@ -515,7 +576,7 @@ in this case it will look like this:
    query => "author:jack"
  }
 
-=item explain
+=head3 explain
 
 syntax:
  explain => true()
@@ -549,10 +610,14 @@ will fill '__explain' field in each document, like this:
    took => 6,
  }
 
+=head3 dump_query
+
 syntax:
+
  dump_query => true()
 
 example:
+
  my @result = $s->search({ term => { author => 'jack' } },{ dump_query => true() });
 
 will return the actual query.toString() in the result structure:
@@ -566,9 +631,7 @@ will return the actual query.toString() in the result structure:
  ]
 
 
-=back
-
-=head2 INDEX
+=head1 INDEX
 
 all the indexes are created from messagepack'ed streams, following the same protocol:
 
@@ -606,7 +669,7 @@ example:
                                                                # etc..
         expect_array => true(),
         store => "/var/lib/brick/ram/primary_index_20022014" # it will actually create lucene index there
-                                                             # and next time it tries to autload the file
+                                                             # and next time it tries to autoload the file
                                                              # it will just check if number of documents
                                                              # match.
     }
@@ -615,33 +678,9 @@ example:
 check out the field type options from: L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/document/FieldType.html>
 similarity information: L<https://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/similarities/Similarity.html>
 
-the "data" can be in array format, or just concatinated documnts joined by '' (depending on the "expect_array" setting)
+the C<data> can be in array format, or just concatinated documnts joined by '' (depending on the C<expect_array> setting)
 
-=over 2
-
-=item
-
-file backed
-
-You can create .messagepack files by concatinating the settings with the data, and just putting it in the "RAMBRICK_AUTO_LOAD_ROOT" (by default "/var/lib/brick/ram/") directory (start brick with RAMBRICK_AUTO_LOAD_ROOT env variable set to wherever you want). Those indexes can also be stored as lucene index (if the "stored" setting points to a directory within the RAMBRIKC_AUTO_LOAD_ROOT)
-
-=item
-
-online
-
- my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
- $s->index([{ author => 'jack', group_by => "23" },{ author => 'jack', group_by => "24" }],$settings);
-
-this will just send one blob of data to "ram:store:__test__", which will be rerouted to "RAMBrick.store('__test__',unpacker)"
-and the next portion of data will be in the format <settings><data...>
-
-=back
-
-In case the number of expected documents does not match the number of documents indexed, it will not create the index.
-
-=head4 the store option
-
-there is an option to store the indexes on disk, just specify the directory name in the index's settings (it MUST be somewhere within the RAMBRICK_AUTO_LOAD_ROOT).
+the C<store> option tells C<RAMBrick> to store the lucene indexes on disk(instead of using C<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/store/RAMDirectory.html>), just specify the directory name in the index's settings (it B<MUST> be somewhere within the C<RAMBRICK_AUTO_LOAD_ROOT>).
 
 the structure in our $settings example will look like:
 
@@ -652,17 +691,44 @@ the structure in our $settings example will look like:
 
 each of those directories will contain the lucene index (using L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/store/NIOFSDirectory.html>)
 
-=head4 delete an index
+In case the number of B<expected> documents does not match the number of documents B<indexed>, it will B<not> create the index.
 
-when you delete an index, it will delete the autoload .messagepack file + the stored directory
+=over 1
+
+=item file backed
+
+You can create C<.msgpack> files by concatinating the settings with the data, and just putting it in the C<RAMBRICK_AUTO_LOAD_ROOT> (by default B</var/lib/brick/ram/>) directory (start brick with C<RAMBRICK_AUTO_LOAD_ROOT> env variable set to wherever you want). Those indexes can also be stored as C<lucene> index (if the C<store> setting points to a directory within the C<RAMBRIKC_AUTO_LOAD_ROOT>)
+
+=item online
+
+ my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
+ $s->index([{ author => 'jack', group_by => "23" },{ author => 'jack', group_by => "24" }],$settings);
+
+this will just send one blob of data to C<ram:store:__test__>, which will be rerouted to C<RAMBrick.store('__test__',unpacker)>
+and the next portion of data will be in the format <settings><data...>, this index will be B<lost> after the C<brick> server is restarted.
+
+=item delete
+
+when you delete an index, it will delete the autoload B<.msgpack> file + the stored directory (containing all the C<lucene> indexes)
 
  my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
  $s->delete();
 
+=back
 
-=head2 ALIAS
+=head1 ALIAS
 
-=head2 STAT
+The aliases state is kept in a small metadata file named C<$RAMBRICK_AUTO_LOAD_ROOT/alias.metadata>, every time alias is modified/created/deleted it will update this file. This file is loaded into the C<alias hash> at init time.
+
+ my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
+ $s->alias({
+   add => [ { "some_alias_name" => "some_index_name" } ],
+   delete => [ "some_alias","some_other_alias" ]
+ });
+
+aliases are atomic, meaning that the whole request will be executed at one go. the order of the C<add> and C<delete> operation is B<undefined>, but the order within the operations is honored.
+
+=head1 STAT
 
  my $s = Search::Brick::RAM::Query->new(host => '127.0.0.1:9000', index => '__test__');
  print Dumper([$s->stat()]);
@@ -695,7 +761,7 @@ will produce:
  ]
 
 
-=head2 EXAMPLES:
+=head1 EXAMPLES:
 
 at the moment it looks like this: sister queries are joined by BooleanQuery with a
 MUST clause for example:
