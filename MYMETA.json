@@ -32,7 +32,6 @@
       },
       "runtime" : {
          "requires" : {
-            "Data::Dumper" : "2.145",
             "Data::MessagePack" : "0.48",
             "Data::MessagePack::Stream" : "0.07",
             "IO::Select" : "1.17",
@@ -42,5 +41,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.05"
+   "version" : "0.06"
 }

@@ -3,7 +3,6 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
-use Data::Dumper;
 use Search::Brick::RAM::Query qw(false query);
 unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";
@@ -91,7 +90,6 @@ my @r2 = $b2->search({ term => {title => 'book' }});
 my @stats = $b1->stat();
 is ($stats[0]->{'alias.default_second_alias'},'zzz_default_second');
 is ($r1[0]->{hits}->[0]->{__score},$r1[0]->{hits}->[1]->{__score});
-use Data::Dumper;
 my @deleted1 = $b1->delete();
 my @deleted2 = $b2->delete();
 is ($deleted1[0]->{'default_second_alias'},0,"delete on alias name should fail");

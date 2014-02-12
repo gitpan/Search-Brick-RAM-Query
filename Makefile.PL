@@ -13,7 +13,6 @@ WriteMakefile(
         Test::Exception => 0.32,
         IO::Select => 1.17,
         Time::HiRes => 1.9721,
-        Data::Dumper => 2.145
     },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Search/Brick/RAM/Query.pm', # retrieve abstract from module

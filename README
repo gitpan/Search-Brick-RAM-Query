@@ -25,7 +25,6 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-   Data::Dumper
    Data::MessagePack
    Data::MessagePack::Stream
    Time::HiRes

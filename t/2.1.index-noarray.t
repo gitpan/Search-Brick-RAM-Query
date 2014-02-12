@@ -3,7 +3,6 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
-use Data::Dumper;
 use Search::Brick::RAM::Query qw(false true);
 unless ($ENV{TEST_LIVE}) {
     plan skip_all => "Enable live testing by setting env: TEST_LIVE=1";

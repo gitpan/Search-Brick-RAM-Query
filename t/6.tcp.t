@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Exception;
-use Data::Dumper;
 use Search::Brick::RAM::Query qw(tcp);
 use Socket qw(PF_INET SOCK_STREAM pack_sockaddr_in inet_ntoa $CRLF);
 
