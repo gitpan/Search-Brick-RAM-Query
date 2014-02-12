@@ -24,7 +24,7 @@ our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw() ] );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(fetch query new tcp true false msgpack_array_begin msgpack_map_begin);
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 # some parts are borrowed from Hijk
 # https://github.com/gugod/Hijk/blob/master/lib/Hijk.pm
@@ -510,6 +510,7 @@ more detailed info on the span queries: L<http://searchhub.org/2009/07/18/the-sp
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/spans/SpanNearQuery.html>
 
 syntax:
+
  {
     span_near => { 
         clauses => [ 
@@ -550,6 +551,7 @@ example:
 creates L<http://lucene.apache.org/core/4_6_0/core/org/apache/lucene/search/spans/SpanTermQuery.html>
 
 syntax:
+
  span_term => { field => value }
 
 span_term queries are the building block of all span queries
@@ -761,7 +763,7 @@ will produce:
  ]
 
 
-=head1 EXAMPLES:
+=head1 EXAMPLES
 
 at the moment it looks like this: sister queries are joined by BooleanQuery with a
 MUST clause for example:
@@ -872,9 +874,7 @@ another example:
   'query' => '__no_default_field__:ConstantScore author:john^8273.0'
  }];
 
-as you can see the return structure is [{},{},{}] one result per 
-request (for example if we do $b = Search::Brick::RAM::Query->new(host => [ '127.0.0.1:900','127.0.0.1:900])
-there will be [{hits => []},{hits => []}] in the output)
+as you can see the return structure is C<[{},{},{}]> one result per request (for example if we do C<< $b = Search::Brick::RAM::Query->new(host => [ '127.0.0.1:900','127.0.0.1:900]) >> there will be C<< [{hits => []},{hits => []}] >> in the output).
 
 =head1 SEE ALSO
 

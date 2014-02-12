@@ -12,7 +12,7 @@ WriteMakefile(
         Data::MessagePack::Stream => 0.07,
         Test::Exception => 0.32,
         IO::Select => 1.17,
-        Time::HiRes => 1.9725,
+        Time::HiRes => 1.9721,
         Data::Dumper => 2.145
     },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005

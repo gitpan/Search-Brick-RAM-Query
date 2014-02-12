@@ -37,10 +37,10 @@
             "Data::MessagePack::Stream" : "0.07",
             "IO::Select" : "1.17",
             "Test::Exception" : "0.32",
-            "Time::HiRes" : "1.9725"
+            "Time::HiRes" : "1.9721"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.04"
+   "version" : "0.05"
 }

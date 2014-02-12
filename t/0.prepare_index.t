@@ -54,7 +54,7 @@ sub _store_as_file {
     syswrite($fh,$packer->pack($settings));
     syswrite($fh,$packer->pack($data));
     close($fh);
-    sleep(3);
+    sleep(5);
 }
 
 my @list = ();
