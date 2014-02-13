@@ -23,7 +23,7 @@ our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( 'all' => [ qw() ] );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(fetch query new tcp true false msgpack_array_begin msgpack_map_begin);
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 # some parts are borrowed from Hijk
 # https://github.com/gugod/Hijk/blob/master/lib/Hijk.pm

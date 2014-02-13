@@ -10,7 +10,7 @@ WriteMakefile(
     PREREQ_PM         => {
         Data::MessagePack => 0.48,
         Data::MessagePack::Stream => 0.07,
-        Test::Exception => 0.32,
+        Test::Exception => 0.31,
         IO::Select => 1.17,
         Time::HiRes => 1.9721,
     },
